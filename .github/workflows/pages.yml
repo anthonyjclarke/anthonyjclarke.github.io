@@ -1,0 +1,43 @@
+# Deploys the hub (index.html + projects.json) to the root of
+# anthonyjclarke.github.io. It never holds firmware: each project deploys its
+# own Pages at /<repo>/ through cyd-web-installer's reusable workflow.
+
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the project list
+        run: jq -e 'type == "array" and all(type == "string")' projects.json
+
+      - name: Stage site
+        run: |
+          mkdir _site
+          cp index.html projects.json _site/
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - id: deploy
+        uses: actions/deploy-pages@v5

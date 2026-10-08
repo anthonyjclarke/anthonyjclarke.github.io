@@ -1,0 +1,172 @@
+<!doctype html>
+<!--
+  Hub for every CYD project's web installer. It stores no firmware: each
+  project in projects.json deploys its own Pages at /<repo>/, which shares
+  this origin, so the buttons point straight at /<repo>/manifest-*.json.
+  Each project's index.json is written by cyd-web-installer's
+  tools/make_manifests.py.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CYD Web Installers</title>
+<script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --text: #1d1d1f; --muted: #5f6066;
+    --line: #dcdad3; --accent: #c99a00; --accent-text: #1d1d1f;
+    --sel: #fff6d6; --warn: #8a5a00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121214; --panel: #1c1c20; --text: #ececf0; --muted: #a0a0aa;
+      --line: #2e2e35; --accent: #ffd23f; --accent-text: #121214;
+      --sel: #2a2614; --warn: #ffcf70;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 1.7rem; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 1.05rem; margin: 32px 0 10px; }
+  .lead { margin: 0; }
+  .projects { display: grid; gap: 16px; margin-top: 24px; }
+  .project {
+    padding: 16px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--panel);
+  }
+  .project h3 { font-size: 1.25rem; margin: 0; }
+  .meta { color: var(--muted); margin: 2px 0 12px; font-size: 0.92rem; }
+  .boards { display: grid; gap: 8px; margin-bottom: 14px; }
+  .board {
+    display: grid; grid-template-columns: auto 1fr; gap: 2px 12px;
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+    cursor: pointer;
+  }
+  .board:has(input:checked) { border-color: var(--accent); background: var(--sel); }
+  .board input { grid-row: span 2; margin-top: 5px; accent-color: var(--accent); }
+  .board strong { font-weight: 600; }
+  .board span { color: var(--muted); font-size: 0.92rem; }
+  .install { min-height: 48px; }
+  .btn {
+    font: inherit; font-weight: 600; padding: 12px 22px; border: 0;
+    border-radius: 10px; background: var(--accent); color: var(--accent-text);
+    cursor: pointer;
+  }
+  .note {
+    padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--warn); margin: 0;
+  }
+  .links { margin: 12px 0 0; font-size: 0.92rem; color: var(--muted); }
+  ul { padding-left: 20px; margin: 0; }
+  li + li { margin-top: 6px; }
+  a { color: inherit; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>CYD Web Installers</h1>
+  <p class="lead">Firmware for the ESP32 Cheap Yellow Display, installed over USB
+    straight from this page. Pick a project and your board, connect it with a
+    USB data cable, and click install. You don't need PlatformIO or any other tools.</p>
+
+  <div class="projects" id="projects"></div>
+
+  <h2>What to expect</h2>
+  <ul>
+    <li><strong>First install:</strong> say yes when asked to erase the device.</li>
+    <li><strong>Already running that firmware?</strong> The installer recognises it
+      and offers <em>Update</em>. Your settings and WiFi are kept.</li>
+    <li><strong>WiFi:</strong> after installing, choose <em>Configure WiFi</em> in
+      the installer if it's offered, or use the project's own setup steps.</li>
+    <li><strong>Wrong board?</strong> A blank or garbled screen won't harm anything.
+      Install again with the right board selected.</li>
+  </ul>
+
+  <h2>Requirements</h2>
+  <ul>
+    <li>Desktop Chrome, Edge or Opera. Firefox and Safari can't talk to USB serial ports.</li>
+    <li>On Windows, if no port appears, install the
+      <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers">CP210x</a>
+      or <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html">CH340</a> driver,
+      depending on your board's USB chip.</li>
+    <li>Some USB cables only carry power. If no port appears, try another cable.</li>
+  </ul>
+
+  <footer>
+    <a href="https://github.com/anthonyjclarke">Anthony Clarke</a> ·
+    Installer by <a href="https://github.com/esphome/esp-web-tools">ESP Web Tools</a> ·
+    <a href="https://github.com/anthonyjclarke/cyd-web-installer">How it's built</a>
+  </footer>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, props, ...kids) => {
+    const n = Object.assign(document.createElement(tag), props);
+    n.append(...kids);
+    return n;
+  };
+  const link = (href, text) => el("a", { href }, text);
+
+  // ESP Web Tools reads the manifest once, so swap in a fresh button per board.
+  function showButton(slot, manifest) {
+    const btn = el("esp-web-install-button", {});
+    btn.setAttribute("manifest", manifest);
+    btn.append(
+      el("button", { className: "btn", slot: "activate" }, "Connect & install"),
+      el("p", { className: "note", slot: "unsupported" },
+        "This browser can't reach USB devices. Open this page in desktop Chrome, Edge or Opera."),
+      el("p", { className: "note", slot: "not-allowed" },
+        "USB access needs a secure (https) page."));
+    slot.replaceChildren(btn);
+  }
+
+  function projectCard(repo, info) {
+    const base = "/" + repo + "/";
+    const install = el("div", { className: "install" });
+    const boards = el("div", { className: "boards", role: "radiogroup" });
+    boards.setAttribute("aria-label", info.project + " board");
+    info.boards.forEach((b, i) => {
+      const input = el("input", { type: "radio", name: "board-" + repo, checked: i === 0 });
+      input.addEventListener("change", () => showButton(install, base + b.manifest));
+      boards.append(el("label", { className: "board" },
+        input, el("strong", {}, b.label), el("span", {}, b.hint)));
+    });
+    showButton(install, base + info.boards[0].manifest);
+
+    const meta = el("p", { className: "meta" }, "Firmware " + info.version);
+    const u = info.basedOn;
+    if (u && u.project) meta.append(" · Based on ", link(u.repository, u.project), " by " + u.author);
+    const links = el("p", { className: "links" },
+      link(base, "Project installer page"), " · ", link(info.repository, "Source"));
+    return el("section", { className: "project" },
+      el("h3", {}, info.project), meta, boards, install, links);
+  }
+
+  function missingCard(repo, why) {
+    return el("section", { className: "project" }, el("h3", {}, repo),
+      el("p", { className: "meta" }, "No installer published yet (" + why + ")."));
+  }
+
+  const getJson = (url) => fetch(url, { cache: "no-store" })
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+
+  getJson("projects.json")
+    .then((repos) => Promise.all(repos.map((repo) =>
+      getJson("/" + repo + "/index.json")
+        .then((info) => projectCard(repo, info))
+        .catch((e) => missingCard(repo, e.message)))))
+    .then((cards) => $("projects").replaceChildren(...cards))
+    .catch((e) => {
+      $("projects").replaceChildren(el("p", { className: "note" },
+        "Couldn't load the project list (" + e.message + "). Reload to try again."));
+    });
+</script>
+</body>
+</html>
