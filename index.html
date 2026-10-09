@@ -129,16 +129,18 @@
 
   function projectCard(repo, info) {
     const base = "/" + repo + "/";
+    // ?v= skips a manifest cached from the previous release (Pages: max-age=600).
+    const manifestUrl = (b) => base + b.manifest + "?v=" + encodeURIComponent(info.version);
     const install = el("div", { className: "install" });
     const boards = el("div", { className: "boards", role: "radiogroup" });
     boards.setAttribute("aria-label", info.project + " board");
     info.boards.forEach((b, i) => {
       const input = el("input", { type: "radio", name: "board-" + repo, checked: i === 0 });
-      input.addEventListener("change", () => showButton(install, base + b.manifest));
+      input.addEventListener("change", () => showButton(install, manifestUrl(b)));
       boards.append(el("label", { className: "board" },
         input, el("strong", {}, b.label), el("span", {}, b.hint)));
     });
-    showButton(install, base + info.boards[0].manifest);
+    showButton(install, manifestUrl(info.boards[0]));
 
     const meta = el("p", { className: "meta" }, "Firmware " + info.version);
     const u = info.basedOn;
