@@ -220,12 +220,14 @@ version such as `X.Y.Z-dev.0`, and never commit that change.
    environment step in `RUNBOOK.md` step 4 first.
 3. **Release it** as above.
 4. **List it on the hub.** Add the repo name to `projects.json` in this repo,
-   in display order, then commit and push to `main`.
+   in display order, and a row to "Projects on the hub" above. Then commit
+   and push to `main`.
    `.github/workflows/pages.yml` checks the list and deploys within a minute.
    A name listed before its first release shows "No installer published yet"
    instead of breaking the page.
 
-To remove a project, delete its name from `projects.json` and push. Don't
+To remove a project, delete its name from `projects.json` and its row above,
+then push. Don't
 rename a project repo: its installer URL changes with it.
 
 ### When the shared tooling changes
