@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.0] 12-10-2026
+
+### Added
+
+- Filters for project type, screen size and chip, plus a name search. Each
+  card shows its type, chip and screen sizes as tags. Choosing a screen size
+  also selects that board in each card. A filter group with only one value
+  stays hidden.
+- `projects.json` entries are now objects: `{ "repo": "…", "type": "Clock" }`.
+  A bare repo-name string still works, with the type "Other". The Pages check
+  accepts both.
+
+### Changed
+
+- The hub is for all ESP32 projects, not only CYD boards. It is retitled
+  **ESP32 Web Installers**, the page notes that native-USB boards need no
+  driver, and the README describes the filters and the new `projects.json`
+  format.
+
 ## [1.1.0] 11-10-2026
 
 ### Added

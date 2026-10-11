@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  Hub for every CYD project's web installer. It stores no firmware: each
+  Hub for every ESP32 project's web installer. It stores no firmware: each
   project in projects.json deploys its own Pages at /<repo>/, which shares
   this origin, so the buttons point straight at /<repo>/manifest-*.json.
   Each project's index.json is written by cyd-web-installer's
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CYD Web Installers</title>
+<title>ESP32 Web Installers</title>
 <script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
 <style>
   :root {
@@ -66,14 +66,46 @@
   li + li { margin-top: 6px; }
   a { color: inherit; }
   footer { margin-top: 40px; color: var(--muted); font-size: 0.9rem; }
+  .filters { display: grid; gap: 10px; margin-top: 24px; }
+  .filters[hidden] { display: none; }
+  .search {
+    font: inherit; width: 100%; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--text);
+  }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .group[hidden] { display: none; }
+  .group-label { color: var(--muted); font-size: 0.85rem; min-width: 64px; }
+  .pill {
+    font: inherit; font-size: 0.9rem; padding: 4px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--text);
+    cursor: pointer;
+  }
+  .pill[aria-pressed="true"] { border-color: var(--accent); background: var(--sel); }
+  .count { margin: 0; color: var(--muted); font-size: 0.9rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+  .tag {
+    font-size: 0.8rem; padding: 1px 8px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--muted);
+  }
+  .project[hidden] { display: none; }
 </style>
 </head>
 <body>
 <main>
-  <h1>CYD Web Installers</h1>
-  <p class="lead">Firmware for the ESP32 Cheap Yellow Display, installed over USB
-    straight from this page. Pick a project and your board, connect it with a
-    USB data cable, and click install. You don't need PlatformIO or any other tools.</p>
+  <h1>ESP32 Web Installers</h1>
+  <p class="lead">Firmware for my ESP32 display projects – the Cheap Yellow Display
+    family, ESP32-S3 panels and more – installed over USB straight from this
+    page. Pick a project and your board, connect it with a USB data cable, and
+    click install. You don't need PlatformIO or any other tools.</p>
+
+  <div class="filters" id="filters" hidden>
+    <input class="search" id="search" type="search" placeholder="Search projects"
+      aria-label="Search projects">
+    <div class="group" id="f-type" role="group" aria-label="Project type"></div>
+    <div class="group" id="f-size" role="group" aria-label="Screen size"></div>
+    <div class="group" id="f-chip" role="group" aria-label="Chip"></div>
+    <p class="count" id="count" aria-live="polite"></p>
+  </div>
 
   <div class="projects" id="projects"></div>
 
@@ -91,7 +123,8 @@
   <h2>Requirements</h2>
   <ul>
     <li>Desktop Chrome, Edge or Opera. Firefox and Safari can't talk to USB serial ports.</li>
-    <li>On Windows, if no port appears, install the
+    <li>Boards with native USB, such as most ESP32-S3 boards, need no driver.</li>
+    <li>On Windows, if no port appears on a board with a USB-serial chip, install the
       <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers">CP210x</a>
       or <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html">CH340</a> driver,
       depending on your board's USB chip.</li>
@@ -127,44 +160,122 @@
     slot.replaceChildren(btn);
   }
 
-  function projectCard(repo, info) {
+  // "2.8″ …", '7" …', "7-inch …" -> "2.8″" / "7″". Board labels carry the size.
+  const sizeOf = (label) => {
+    const m = /(\d+(?:\.\d+)?)\s*(?:″|"|”|-?inch\b|in\b)/i.exec(label || "");
+    return m ? m[1] + "″" : null;
+  };
+
+  function projectCard(entry, info) {
+    const repo = entry.repo;
     const base = "/" + repo + "/";
     // ?v= skips a manifest cached from the previous release (Pages: max-age=600).
     const manifestUrl = (b) => base + b.manifest + "?v=" + encodeURIComponent(info.version);
     const install = el("div", { className: "install" });
     const boards = el("div", { className: "boards", role: "radiogroup" });
     boards.setAttribute("aria-label", info.project + " board");
-    info.boards.forEach((b, i) => {
+    const inputs = info.boards.map((b, i) => {
       const input = el("input", { type: "radio", name: "board-" + repo, checked: i === 0 });
       input.addEventListener("change", () => showButton(install, manifestUrl(b)));
       boards.append(el("label", { className: "board" },
         input, el("strong", {}, b.label), el("span", {}, b.hint)));
+      return input;
     });
     showButton(install, manifestUrl(info.boards[0]));
+
+    // Before tooling 1.2 index.json had no chip; every board then was an ESP32.
+    const chips = [...new Set(info.boards.map((b) => b.chip || "ESP32"))];
+    const sizes = [...new Set(info.boards.map((b) => sizeOf(b.label)).filter(Boolean))]
+      .sort((a, b) => parseFloat(a) - parseFloat(b));
+    const tags = el("p", { className: "tags" },
+      ...[entry.type, ...chips, ...sizes].map((x) => el("span", { className: "tag" }, x)));
 
     const meta = el("p", { className: "meta" }, "Firmware " + info.version);
     const u = info.basedOn;
     if (u && u.project) meta.append(" · Based on ", link(u.repository, u.project), " by " + u.author);
     const links = el("p", { className: "links" },
       link(base, "Project installer page"), " · ", link(info.repository, "Source"));
-    return el("section", { className: "project" },
-      el("h3", {}, info.project), meta, boards, install, links);
+    const card = el("section", { className: "project" },
+      el("h3", {}, info.project), meta, tags, boards, install, links);
+
+    // With a screen-size filter on, pre-select the first board of that size.
+    const selectSize = (size) => {
+      const i = info.boards.findIndex((b) => sizeOf(b.label) === size);
+      if (i >= 0 && !inputs[i].checked) {
+        inputs[i].checked = true;
+        showButton(install, manifestUrl(info.boards[i]));
+      }
+    };
+    const text = [info.project, entry.type, ...info.boards.map((b) => b.label + " " + b.hint)]
+      .join(" ").toLowerCase();
+    return { card, type: entry.type, chips, sizes, text, selectSize };
   }
 
-  function missingCard(repo, why) {
-    return el("section", { className: "project" }, el("h3", {}, repo),
+  function missingCard(entry, why) {
+    const card = el("section", { className: "project" }, el("h3", {}, entry.repo),
       el("p", { className: "meta" }, "No installer published yet (" + why + ")."));
+    return { card, type: entry.type, chips: [], sizes: [], text: entry.repo.toLowerCase(),
+      selectSize: () => {} };
+  }
+
+  // One filter group: an "All" pill plus one per value; hidden with < 2 values.
+  const state = { q: "", type: null, size: null, chip: null };
+  function pills(id, label, key, values, projects) {
+    const group = $(id);
+    group.hidden = values.length < 2;
+    const all = [null, ...values];
+    const buttons = all.map((v) => {
+      const b = el("button", { className: "pill", type: "button" }, v || "All");
+      b.addEventListener("click", () => { state[key] = v; render(); apply(projects); });
+      return b;
+    });
+    const render = () => buttons.forEach((b, i) =>
+      b.setAttribute("aria-pressed", String(all[i] === state[key])));
+    render();
+    group.replaceChildren(el("span", { className: "group-label" }, label), ...buttons);
+  }
+
+  function apply(projects) {
+    let shown = 0;
+    for (const p of projects) {
+      const match = (!state.q || p.text.includes(state.q))
+        && (!state.type || p.type === state.type)
+        && (!state.size || p.sizes.includes(state.size))
+        && (!state.chip || p.chips.includes(state.chip));
+      p.card.hidden = !match;
+      if (match) { shown++; if (state.size) p.selectSize(state.size); }
+    }
+    $("count").textContent = shown === projects.length
+      ? projects.length + " projects"
+      : shown + " of " + projects.length + " projects" + (shown ? "" : " – clear a filter");
   }
 
   const getJson = (url) => fetch(url, { cache: "no-store" })
     .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
 
+  // projects.json: [{"repo": "...", "type": "Clock"}, ...]. A bare repo-name
+  // string still works and gets the type "Other".
   getJson("projects.json")
-    .then((repos) => Promise.all(repos.map((repo) =>
-      getJson("/" + repo + "/index.json")
-        .then((info) => projectCard(repo, info))
-        .catch((e) => missingCard(repo, e.message)))))
-    .then((cards) => $("projects").replaceChildren(...cards))
+    .then((list) => Promise.all(list
+      .map((e) => (typeof e === "string" ? { repo: e } : e))
+      .map((e) => Object.assign({ type: "Other" }, e))
+      .map((entry) => getJson("/" + entry.repo + "/index.json")
+        .then((info) => projectCard(entry, info))
+        .catch((err) => missingCard(entry, err.message)))))
+    .then((projects) => {
+      $("projects").replaceChildren(...projects.map((p) => p.card));
+      const uniq = (f) => [...new Set(projects.flatMap(f))];
+      pills("f-type", "Type", "type", uniq((p) => [p.type]).sort(), projects);
+      pills("f-size", "Screen", "size",
+        uniq((p) => p.sizes).sort((a, b) => parseFloat(a) - parseFloat(b)), projects);
+      pills("f-chip", "Chip", "chip", uniq((p) => p.chips).sort(), projects);
+      $("search").addEventListener("input", (ev) => {
+        state.q = ev.target.value.trim().toLowerCase();
+        apply(projects);
+      });
+      $("filters").hidden = false;
+      apply(projects);
+    })
     .catch((e) => {
       $("projects").replaceChildren(el("p", { className: "note" },
         "Couldn't load the project list (" + e.message + "). Reload to try again."));

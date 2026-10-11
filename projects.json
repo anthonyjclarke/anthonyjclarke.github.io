@@ -1,1 +1,15 @@
-["CYD_AnimatedPixelClock", "CYD_WordClock", "CYD_Display_Test", "CYD_WifiScan_Display", "AuroraDemo_CYD", "CYD_PongClock", "F1_CYD_Notifications", "CYD_TFT_RetroClock", "CYD_Split-Flap-Clock", "CYD-RGB-LED-Matrix-HUB75-Retro-Clock", "CYD_Family_Clock", "CYD_BusStop_NSW", "TheFlightWall_CYD"]
+[
+  { "repo": "CYD_AnimatedPixelClock", "type": "Clock" },
+  { "repo": "CYD_WordClock", "type": "Clock" },
+  { "repo": "CYD_PongClock", "type": "Clock" },
+  { "repo": "CYD_TFT_RetroClock", "type": "Clock" },
+  { "repo": "CYD-RGB-LED-Matrix-HUB75-Retro-Clock", "type": "Clock" },
+  { "repo": "CYD_Split-Flap-Clock", "type": "Clock" },
+  { "repo": "CYD_Family_Clock", "type": "Clock" },
+  { "repo": "F1_CYD_Notifications", "type": "Dashboard" },
+  { "repo": "CYD_BusStop_NSW", "type": "Dashboard" },
+  { "repo": "TheFlightWall_CYD", "type": "Dashboard" },
+  { "repo": "CYD_WifiScan_Display", "type": "Tool" },
+  { "repo": "CYD_Display_Test", "type": "Tool" },
+  { "repo": "AuroraDemo_CYD", "type": "Demo" }
+]

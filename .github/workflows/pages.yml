@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Check the project list
-        run: jq -e 'type == "array" and all(type == "string")' projects.json
+        run: jq -e 'type == "array" and all(type == "string" or (type == "object" and (.repo | type) == "string"))' projects.json
 
       - name: Stage site
         run: |

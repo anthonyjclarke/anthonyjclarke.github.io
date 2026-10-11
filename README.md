@@ -1,7 +1,8 @@
 # anthonyjclarke.github.io
 
-Browser installers for my ESP32 CYD (Cheap Yellow Display) projects:
-<https://anthonyjclarke.github.io/>. Pick a project and a board, plug the board
+Browser installers for my ESP32 projects – the CYD (Cheap Yellow Display)
+family, ESP32-S3 panels and more: <https://anthonyjclarke.github.io/>. Filter
+by project type, screen size or chip, or search by name. Pick a project and a board, plug the board
 in with a USB data cable, and click **Connect & install** in desktop Chrome,
 Edge or Opera. You don't need PlatformIO or esptool. A board that already runs
 the firmware is offered **Update**, which keeps its settings and WiFi.
@@ -13,30 +14,45 @@ change.
 
 ## Projects on the hub
 
-| Project                              | What it is                         | Boards           |
-|:-------------------------------------|:-----------------------------------|:-----------------|
-| CYD_AnimatedPixelClock               | Animated retro-arcade pixel clock  | 2.8″, 2.4″, 4.0″ |
-| CYD_WordClock                        | Word clock                         | 2.8″             |
-| CYD_Display_Test                     | Display test; new-project scaffold | 2.8″, 4.0″       |
-| CYD_WifiScan_Display                 | WiFi network scanner               | 2.8″             |
-| AuroraDemo_CYD                       | Aurora matrix demos (no WiFi)      | 2.8″, 4.0″       |
-| CYD_PongClock                        | Pong clock                         | 2.8″             |
-| F1_CYD_Notifications                 | F1 sessions and Telegram alerts    | 2.8″             |
-| CYD_TFT_RetroClock                   | MAX7219 LED matrix clock look      | 2.8″             |
-| CYD_Split-Flap-Clock                 | Split-flap clock                   | 2.8″             |
-| CYD-RGB-LED-Matrix-HUB75-Retro-Clock | HUB75 LED matrix clock look        | 2.8″             |
-| CYD_Family_Clock                     | Family and world clock             | 2.8″             |
-| CYD_BusStop_NSW                      | NSW bus departures (own API key)   | 2.8″             |
-| TheFlightWall_CYD                    | Flights overhead (own API keys)    | 2.8″, 4.0″       |
+| Project                              | Type      | What it is                         | Boards           |
+|:-------------------------------------|:----------|:-----------------------------------|:-----------------|
+| CYD_AnimatedPixelClock               | Clock     | Animated retro-arcade pixel clock  | 2.4″, 2.8″, 4.0″ |
+| CYD_WordClock                        | Clock     | Word clock                         | 2.8″             |
+| CYD_PongClock                        | Clock     | Pong clock                         | 2.8″             |
+| CYD_TFT_RetroClock                   | Clock     | MAX7219 LED matrix clock look      | 2.8″             |
+| CYD-RGB-LED-Matrix-HUB75-Retro-Clock | Clock     | HUB75 LED matrix clock look        | 2.8″             |
+| CYD_Split-Flap-Clock                 | Clock     | Split-flap clock                   | 2.8″             |
+| CYD_Family_Clock                     | Clock     | Family and world clock             | 2.8″             |
+| F1_CYD_Notifications                 | Dashboard | F1 sessions and Telegram alerts    | 2.8″             |
+| CYD_BusStop_NSW                      | Dashboard | NSW bus departures (own API key)   | 2.8″             |
+| TheFlightWall_CYD                    | Dashboard | Flights overhead (own API keys)    | 2.8″, 4.0″       |
+| CYD_WifiScan_Display                 | Tool      | WiFi network scanner               | 2.8″             |
+| CYD_Display_Test                     | Tool      | Display test; new-project scaffold | 2.8″, 4.0″       |
+| AuroraDemo_CYD                       | Demo      | Aurora matrix demos (no WiFi)      | 2.8″, 4.0″       |
+
+All of these run on an ESP32 CYD board: the 2.4″ ESP32-2432S024, the 2.8″
+ESP32-2432S028R or the 4.0″ ESP32-32E. Next is ESP32S3-Weather, an ESP32-S3
+7″ panel and the first non-CYD project.
 
 Each project's installer is at `https://anthonyjclarke.github.io/<repo>/`, and
 its source at `https://github.com/anthonyjclarke/<repo>`. Versions aren't
 listed here on purpose: the hub reads each project's live `index.json`, so it
-always shows the latest release. The boards are the 2.8″ ESP32-2432S028R, the
-2.4″ ESP32-2432S024 and the 4.0″ ESP32-32E.
+always shows the latest release.
 
-Not on the hub: ESP32_Touchdown_Retro_Clock and the ESP32-S3 projects. The hub
-is for CYD boards only.
+### How the filters work
+
+| Filter      | Comes from                                  |
+|:------------|:--------------------------------------------|
+| Type        | `"type"` for the project in `projects.json` |
+| Screen size | The size in each board's installer label    |
+| Chip        | Read from the firmware image by the tooling |
+| Search      | Project name, type, board labels and hints  |
+
+A filter group appears only when it has at least two values. The screen-size
+filter reads a size written as `2.8″`, `7"` or `7-inch` in a board label, so
+keep the size in every label. Picking a size also selects that board in each
+card. The types in use are **Clock**, **Dashboard**, **Tool** and **Demo**.
+Add a new one just by using it in `projects.json`.
 
 ---
 
@@ -219,16 +235,20 @@ version such as `X.Y.Z-dev.0`, and never commit that change.
    If the second command says the environment doesn't exist, run the
    environment step in `RUNBOOK.md` step 4 first.
 3. **Release it** as above.
-4. **List it on the hub.** Add the repo name to `projects.json` in this repo,
-   in display order, and a row to "Projects on the hub" above. Then commit
-   and push to `main`.
+4. **List it on the hub.** Add an entry to `projects.json` in this repo, in
+   display order (grouped by type), and a row to "Projects on the hub" above.
+   Then commit and push to `main`:
+
+   ```json
+   { "repo": "ESP32S3-Weather", "type": "Dashboard" }
+   ```
+
    `.github/workflows/pages.yml` checks the list and deploys within a minute.
    A name listed before its first release shows "No installer published yet"
    instead of breaking the page.
 
-To remove a project, delete its name from `projects.json` and its row above,
-then push. Don't
-rename a project repo: its installer URL changes with it.
+To remove a project, delete its entry from `projects.json` and its row above,
+then push. Don't rename a project repo: its installer URL changes with it.
 
 ### When the shared tooling changes
 
