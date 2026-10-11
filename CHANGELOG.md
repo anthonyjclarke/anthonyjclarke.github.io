@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0] 12-10-2026
+
+### Added
+
+- ESP32S3-Weather (Dashboard), the first ESP32-S3 and first non-CYD
+  project, on the Waveshare ESP32-S3-Touch-LCD-7.
+
 ## [1.2.0] 12-10-2026
 
 ### Added

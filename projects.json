@@ -9,6 +9,7 @@
   { "repo": "F1_CYD_Notifications", "type": "Dashboard" },
   { "repo": "CYD_BusStop_NSW", "type": "Dashboard" },
   { "repo": "TheFlightWall_CYD", "type": "Dashboard" },
+  { "repo": "ESP32S3-Weather", "type": "Dashboard" },
   { "repo": "CYD_WifiScan_Display", "type": "Tool" },
   { "repo": "CYD_Display_Test", "type": "Tool" },
   { "repo": "AuroraDemo_CYD", "type": "Demo" }

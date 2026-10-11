@@ -26,13 +26,16 @@ change.
 | F1_CYD_Notifications                 | Dashboard | F1 sessions and Telegram alerts    | 2.8″             |
 | CYD_BusStop_NSW                      | Dashboard | NSW bus departures (own API key)   | 2.8″             |
 | TheFlightWall_CYD                    | Dashboard | Flights overhead (own API keys)    | 2.8″, 4.0″       |
+| ESP32S3-Weather                      | Dashboard | Weather map, radar and forecast    | 7″               |
 | CYD_WifiScan_Display                 | Tool      | WiFi network scanner               | 2.8″             |
 | CYD_Display_Test                     | Tool      | Display test; new-project scaffold | 2.8″, 4.0″       |
 | AuroraDemo_CYD                       | Demo      | Aurora matrix demos (no WiFi)      | 2.8″, 4.0″       |
 
-All of these run on an ESP32 CYD board: the 2.4″ ESP32-2432S024, the 2.8″
-ESP32-2432S028R or the 4.0″ ESP32-32E. Next is ESP32S3-Weather, an ESP32-S3
-7″ panel and the first non-CYD project.
+Most of these run on an ESP32 CYD board: the 2.4″ ESP32-2432S024, the 2.8″
+ESP32-2432S028R or the 4.0″ ESP32-32E. ESP32S3-Weather is the first non-CYD
+project: an ESP32-S3 on the Waveshare ESP32-S3-Touch-LCD-7 7″ panel. Plug it
+in by its native **USB** port, not **UART**, or WiFi setup and Update are
+not offered.
 
 Each project's installer is at `https://anthonyjclarke.github.io/<repo>/`, and
 its source at `https://github.com/anthonyjclarke/<repo>`. Versions aren't
